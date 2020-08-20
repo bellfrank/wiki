@@ -12,6 +12,15 @@ from . import util
 class Search(forms.Form):
     item = forms.CharField(widget=forms.TextInput(attrs={'class' : 'myfieldclass', 'placeholder': 'Search'}))
 
+
+class Post(forms.Form):
+    title = forms.CharField(label= "Title")
+    textarea = forms.CharField(widget=forms.Textarea(), label='')
+
+class Edit(forms.Form):
+    textarea = forms.CharField(widget=forms.Textarea(), label='')
+
+
 def index(request):
     entries = util.list_entries()
     searched = []
@@ -46,6 +55,31 @@ def index(request):
             "entries": util.list_entries(), "form":Search()
         })
 def webpages(request, title):
+    page = util.get_entry(title)
     return render(request, "encyclopedia/webpages.html", {
-        "title": util.get_entry(title)
+        "title":markdowner.convert(page)
     })
+
+def create(request):
+    if request.method == 'POST':
+        form = Post(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            textarea = form.cleaned_data["textarea"]
+            entries = util.list_entries()
+            if title in entries:
+                return render(request, "encyclopedia/error.html", {"form": Search(), "message": "Page already exist"})
+            else:
+                util.save_entry(title,textarea)
+                page = util.get_entry(title)
+                page_converted = markdowner.convert(page)
+
+                context = {
+                    'form': Search(),
+                    'page': page_converted,
+                    'title': title
+                }
+
+                return render(request, "encyclopedia/entry.html", context)
+    else:
+        return render(request, "encyclopedia/create.html", {"form": Search(), "post": Post()})
