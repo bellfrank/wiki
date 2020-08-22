@@ -68,7 +68,7 @@ def create(request):
             textarea = form.cleaned_data["textarea"]
             entries = util.list_entries()
             if title in entries:
-                return render(request, "encyclopedia/error.html", {"form": Search(), "message": "Page already exist"})
+                return render(request, "encyclopedia/error.html", {"message": "Page already exists"})
             else:
                 util.save_entry(title,textarea)
                 page = util.get_entry(title)
@@ -83,3 +83,32 @@ def create(request):
                 return render(request, "encyclopedia/entry.html", context)
     else:
         return render(request, "encyclopedia/create.html", {"form": Search(), "post": Post()})
+
+def edit(request, title):
+    if request.method == 'GET':
+        page = util.get_entry(title)
+        
+        context = {
+            'form': Search(),
+            'edit': Edit(initial={'textarea': page}),
+            'title': title
+        }
+
+        return render(request, "encyclopedia/edit.html", context)
+    else:
+        form = Edit(request.POST) 
+        if form.is_valid():
+            textarea = form.cleaned_data["textarea"]
+            util.save_entry(title,textarea)
+            page = util.get_entry(title)
+            page_converted = markdowner.convert(page)
+
+            context = {
+                'form': Search(),
+                'page': page_converted,
+                'title': title
+            }
+
+            return render(request, "encyclopedia/entry.html", context)
+
+
