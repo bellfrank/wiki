@@ -111,4 +111,6 @@ def edit(request, title):
 
             return render(request, "encyclopedia/entry.html", context)
 
+def random(request)
+
 
